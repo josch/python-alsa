@@ -1,0 +1,502 @@
+# do some opaque struct typedefs to make const typedefs possible
+cdef extern from "alsa/asoundlib.h":
+	ctypedef struct snd_mixer_t
+	ctypedef struct snd_mixer_class_t
+	ctypedef struct snd_pcm_t
+	ctypedef struct snd_mixer_elem_t
+	ctypedef struct snd_mixer_selem_id_t
+
+# define const ptr types as cython doesnt know const
+cdef extern from *:
+	ctypedef char* const_char_ptr "const char*"
+	ctypedef snd_mixer_selem_id_t* const_snd_mixer_selem_id_t_ptr "const snd_mixer_selem_id_t *"
+	ctypedef snd_mixer_elem_t* const_snd_mixer_elem_t_ptr "const snd_mixer_elem_t *"
+	ctypedef snd_mixer_t* const_snd_mixer_t_ptr "const snd_mixer_t *"
+
+cdef extern from "stdlib.h":
+	ctypedef unsigned long size_t
+	void *calloc(size_t count, size_t size)
+	void *malloc(size_t size)
+	void free(void *ptr)
+	void *realloc(void *ptr, size_t size)
+
+cdef extern from "alloca.h":
+	void *alloca(size_t size)
+
+cdef extern from "string.h":
+	void *memset (void *s, int c, size_t n)
+
+cdef extern from "sys/poll.h":
+	struct pollfd:
+		int fd
+		short int events
+
+cdef extern from "alsa/asoundlib.h":
+	ctypedef enum snd_mixer_selem_regopt_abstract:
+		pass
+	ctypedef enum snd_mixer_elem_type_t:
+		pass
+	ctypedef enum snd_mixer_selem_channel_id_t: 
+		pass
+	struct snd_mixer_selem_regopt:
+		pass
+	ctypedef int (*snd_mixer_compare_t)(const_snd_mixer_elem_t_ptr e1, const_snd_mixer_elem_t_ptr e2)
+	ctypedef int (*snd_mixer_callback_t)(snd_mixer_t *ctl, unsigned int mask, snd_mixer_elem_t *elem)
+	ctypedef int (*snd_mixer_elem_callback_t)(snd_mixer_elem_t *elem, unsigned int mask)
+
+	int snd_mixer_open(snd_mixer_t **mixer, int mode)
+	int snd_mixer_close(snd_mixer_t *mixer)
+	snd_mixer_elem_t *snd_mixer_first_elem(snd_mixer_t *mixer)
+	snd_mixer_elem_t *snd_mixer_last_elem(snd_mixer_t *mixer)
+	int snd_mixer_handle_events(snd_mixer_t *mixer)
+	int snd_mixer_attach(snd_mixer_t *mixer, const_char_ptr name)
+	int snd_mixer_detach(snd_mixer_t *mixer, const_char_ptr name)
+	int snd_mixer_poll_descriptors_count(snd_mixer_t *mixer)
+	int snd_mixer_poll_descriptors(snd_mixer_t *mixer, pollfd *pfds, unsigned int space)
+	int snd_mixer_poll_descriptors_revents(snd_mixer_t *mixer, pollfd *pfds, unsigned int nfds, unsigned short *revents)
+	int snd_mixer_load(snd_mixer_t *mixer)
+	void snd_mixer_free(snd_mixer_t *mixer)
+	int snd_mixer_wait(snd_mixer_t *mixer, int timeout)
+	int snd_mixer_set_compare(snd_mixer_t *mixer, snd_mixer_compare_t msort)
+	void snd_mixer_set_callback(snd_mixer_t *obj, snd_mixer_callback_t val)
+	void * snd_mixer_get_callback_private(const_snd_mixer_t_ptr obj)
+	void snd_mixer_set_callback_private(snd_mixer_t *obj, void * val)
+	unsigned int snd_mixer_get_count(const_snd_mixer_t_ptr obj)
+	int snd_mixer_class_unregister(snd_mixer_class_t *clss)
+
+	snd_mixer_elem_t *snd_mixer_elem_next(snd_mixer_elem_t *elem)
+	snd_mixer_elem_t *snd_mixer_elem_prev(snd_mixer_elem_t *elem)
+	void snd_mixer_elem_set_callback(snd_mixer_elem_t *obj, snd_mixer_elem_callback_t val)
+	void * snd_mixer_elem_get_callback_private(const_snd_mixer_elem_t_ptr obj)
+	void snd_mixer_elem_set_callback_private(snd_mixer_elem_t *obj, void * val)
+	snd_mixer_elem_type_t snd_mixer_elem_get_type(const_snd_mixer_elem_t_ptr obj)
+
+	int snd_mixer_selem_register(snd_mixer_t *mixer, snd_mixer_selem_regopt *options, snd_mixer_class_t **classp)
+	void snd_mixer_selem_get_id(snd_mixer_elem_t *element, snd_mixer_selem_id_t *id)
+	const_char_ptr snd_mixer_selem_get_name(snd_mixer_elem_t *elem)
+	unsigned int snd_mixer_selem_get_index(snd_mixer_elem_t *elem)
+	snd_mixer_elem_t *snd_mixer_find_selem(snd_mixer_t *mixer, const_snd_mixer_selem_id_t_ptr id)
+
+	int snd_mixer_selem_is_active(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_is_playback_mono(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_playback_channel(snd_mixer_elem_t *obj, snd_mixer_selem_channel_id_t channel)
+	int snd_mixer_selem_is_capture_mono(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_capture_channel(snd_mixer_elem_t *obj, snd_mixer_selem_channel_id_t channel)
+	int snd_mixer_selem_get_capture_group(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_common_volume(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_playback_volume(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_playback_volume_joined(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_capture_volume(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_capture_volume_joined(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_common_switch(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_playback_switch(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_playback_switch_joined(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_capture_switch(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_capture_switch_joined(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_has_capture_switch_exclusive(snd_mixer_elem_t *elem)
+
+	int snd_mixer_selem_ask_playback_vol_dB(snd_mixer_elem_t *elem, long value, long *dBvalue)
+	int snd_mixer_selem_ask_capture_vol_dB(snd_mixer_elem_t *elem, long value, long *dBvalue)
+	int snd_mixer_selem_ask_playback_dB_vol(snd_mixer_elem_t *elem, long dBvalue, int dir, long *value)
+	int snd_mixer_selem_ask_capture_dB_vol(snd_mixer_elem_t *elem, long dBvalue, int dir, long *value)
+	int snd_mixer_selem_get_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value)
+	int snd_mixer_selem_get_capture_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value)
+	int snd_mixer_selem_get_playback_dB(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value)
+	int snd_mixer_selem_get_capture_dB(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value)
+	int snd_mixer_selem_get_playback_switch(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, int *value)
+	int snd_mixer_selem_get_capture_switch(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, int *value)
+	int snd_mixer_selem_set_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long value)
+	int snd_mixer_selem_set_capture_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long value)
+	int snd_mixer_selem_set_playback_dB(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long value, int dir)
+	int snd_mixer_selem_set_capture_dB(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long value, int dir)
+	int snd_mixer_selem_set_playback_volume_all(snd_mixer_elem_t *elem, long value)
+	int snd_mixer_selem_set_capture_volume_all(snd_mixer_elem_t *elem, long value)
+	int snd_mixer_selem_set_playback_dB_all(snd_mixer_elem_t *elem, long value, int dir)
+	int snd_mixer_selem_set_capture_dB_all(snd_mixer_elem_t *elem, long value, int dir)
+	int snd_mixer_selem_set_playback_switch(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, int value)
+	int snd_mixer_selem_set_capture_switch(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, int value)
+	int snd_mixer_selem_set_playback_switch_all(snd_mixer_elem_t *elem, int value)
+	int snd_mixer_selem_set_capture_switch_all(snd_mixer_elem_t *elem, int value)
+	int snd_mixer_selem_get_playback_volume_range(snd_mixer_elem_t *elem, long *min, long *max)
+	int snd_mixer_selem_get_playback_dB_range(snd_mixer_elem_t *elem, long *min, long *max)
+	int snd_mixer_selem_set_playback_volume_range(snd_mixer_elem_t *elem, long min, long max)
+	int snd_mixer_selem_get_capture_volume_range(snd_mixer_elem_t *elem, long *min, long *max)
+	int snd_mixer_selem_get_capture_dB_range(snd_mixer_elem_t *elem, long *min, long *max)
+	int snd_mixer_selem_set_capture_volume_range(snd_mixer_elem_t *elem, long min, long max)
+
+	int snd_mixer_selem_is_enumerated(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_is_enum_playback(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_is_enum_capture(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_get_enum_items(snd_mixer_elem_t *elem)
+	int snd_mixer_selem_get_enum_item_name(snd_mixer_elem_t *elem, unsigned int idx, size_t maxlen, char *str)
+	int snd_mixer_selem_get_enum_item(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, unsigned int *idxp)
+	int snd_mixer_selem_set_enum_item(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, unsigned int idx)
+
+	size_t snd_mixer_selem_id_sizeof()
+	int snd_mixer_selem_id_malloc(snd_mixer_selem_id_t **ptr)
+	void snd_mixer_selem_id_free(snd_mixer_selem_id_t *obj)
+	void snd_mixer_selem_id_copy(snd_mixer_selem_id_t *dst, const_snd_mixer_selem_id_t_ptr src)
+	const_char_ptr snd_mixer_selem_id_get_name(const_snd_mixer_selem_id_t_ptr obj)
+	unsigned int snd_mixer_selem_id_get_index(const_snd_mixer_selem_id_t_ptr obj)
+	void snd_mixer_selem_id_set_name(snd_mixer_selem_id_t *obj, const_char_ptr val)
+	void snd_mixer_selem_id_set_index(snd_mixer_selem_id_t *obj, unsigned int val)
+
+cdef int get_handle(snd_mixer_t **handle):
+	cdef int err
+	err = snd_mixer_open(handle, 0)
+	if err < 0: return err
+	err = snd_mixer_attach(handle[0], "hw:0")
+	if err < 0: return err
+	err = snd_mixer_selem_register(handle[0], NULL, NULL)
+	if err < 0: return err
+	err = snd_mixer_load(handle[0])
+	if err < 0: return err
+	return 0
+
+cdef struct selem:
+	snd_mixer_elem_t *elem
+	selem *next
+
+SANE_CONTROL_COUNT = 16 # assuming a sane value of 16 controls
+
+cdef class Mixer:
+	cdef snd_mixer_t *handle
+	cdef snd_mixer_elem_t **selems
+	_elements = dict()
+	def __init__(self):
+		cdef int selem_count = 0, selems_size = SANE_CONTROL_COUNT
+		cdef snd_mixer_elem_t *temp_elem
+		cdef snd_mixer_elem_t **temp_elems
+		
+		get_handle(&self.handle)
+
+		temp_elem = snd_mixer_first_elem(self.handle)
+		if not temp_elem:
+			return
+		selem_count = 1
+		self.selems = <snd_mixer_elem_t **>malloc(selems_size*sizeof(snd_mixer_elem_t *))
+		self.selems[0] = temp_elem
+
+		while True:
+			temp_elem = snd_mixer_elem_next(temp_elem)
+			if not temp_elem:
+				break
+			selem_count += 1
+			if selem_count > selems_size:
+				# running out of space - realloc double the size
+				selems_size *= 2
+				temp_elems = <snd_mixer_elem_t **>realloc(self.selems, selems_size*sizeof(snd_mixer_elem_t *))
+				if not temp_elems:
+					raise MemoryError
+					return
+				self.selems = temp_elems
+			self.selems[selem_count-1] = temp_elem
+			self._elements[snd_mixer_selem_get_name(self.selems[i])] = {
+				"index": selem_count-1,
+				"enumeration": None,
+				"playback_volume": None,
+				"playback_switch": None,
+				"capture_volume": None,
+				"capture_switch": None
+			}
+		# shrink allocated memory to exact needed size
+		self.selems = <snd_mixer_elem_t **>realloc(self.selems, selem_count*sizeof(snd_mixer_elem_t *))
+		
+	def get_enum_items(self, elem):
+		cdef snd_mixer_elem_t *selem
+		
+		if elem not in self._elements:
+			raise KeyError("not a valid control", elem)
+		
+		elem = self._elements[elem]
+		if not elem["is_enumerated"]:
+			return None
+		
+		index = elem["index"]
+		selem = self.selems[index]
+
+		
+	def get_enum_item(self):
+		pass
+
+	def set_enum_item(self):
+		pass
+	
+	def get_playback_volume(self):
+		pass
+	
+	def set_playback_volume(self):
+		pass
+	
+	def get_capture_volume(self):
+		pass
+	
+	def set_capture_volume(self):
+		pass
+	
+	def get_playback_switch(self):
+		pass
+	
+	def set_playback_switch(self):
+		pass
+
+	def get_capture_switeh(self):
+		pass
+	
+	def set_capture_switch(self):
+		pass
+	
+	def __del__(self):
+		print "Destructor"
+		snd_mixer_close(self.handle)
+
+m = Mixer()
+print m.get_enum_items("IEC958 Playback Source")
+
+def list_elems3():
+	cdef snd_mixer_t *handle
+	cdef snd_mixer_elem_t *elem
+	cdef snd_mixer_selem_id_t *sid
+	cdef long pmin, pmax, cmin, cmax, lvalue
+	cdef int enum_items_count, ivalue
+	cdef char name[32]
+	cdef unsigned int idx
+	
+	sid = <snd_mixer_selem_id_t *>alloca(snd_mixer_selem_id_sizeof())
+	memset(sid, 0, snd_mixer_selem_id_sizeof())
+	
+	get_handle(&handle)
+	elem = snd_mixer_first_elem(handle)
+	
+	print "\tpvol\tcvol\tpsw\tcsw\tenum"
+	while elem:
+		print snd_mixer_selem_get_name(elem),
+		print "\t",
+		if snd_mixer_selem_has_playback_volume(elem):
+			snd_mixer_selem_get_playback_volume(elem, <snd_mixer_selem_channel_id_t>0, &lvalue)
+			print "%d\t"%lvalue,
+		else:
+			print "\t",
+		if snd_mixer_selem_has_playback_switch(elem):
+			snd_mixer_selem_get_playback_switch(elem, <snd_mixer_selem_channel_id_t>0, &ivalue)
+			print "%d\t"%ivalue,
+		else:
+			print "\t",
+		if snd_mixer_selem_has_capture_volume(elem):
+			snd_mixer_selem_get_capture_volume(elem, <snd_mixer_selem_channel_id_t>0, &lvalue)
+			print "%d\t"%lvalue,
+		else:
+			print "\t",
+		if snd_mixer_selem_has_capture_switch(elem):
+			snd_mixer_selem_get_capture_switch(elem, <snd_mixer_selem_channel_id_t>0, &ivalue)
+			print "%d\t"%ivalue,
+		else:
+			print "\t",
+		if snd_mixer_selem_is_enumerated(elem):
+			snd_mixer_selem_get_enum_item(elem, <snd_mixer_selem_channel_id_t>0, &idx)
+			print "%d\t"%idx,
+		else:
+			print "\t",
+		print
+		elem = snd_mixer_elem_next(elem)
+	
+	snd_mixer_close(handle)
+
+def list_elems2():
+	cdef snd_mixer_t *handle
+	cdef snd_mixer_elem_t *elem
+	cdef snd_mixer_selem_id_t *sid
+	cdef long pmin, pmax, cmin, cmax
+	cdef int enum_items_count
+	cdef char name[32]
+	
+	sid = <snd_mixer_selem_id_t *>alloca(snd_mixer_selem_id_sizeof())
+	memset(sid, 0, snd_mixer_selem_id_sizeof())
+	
+	get_handle(&handle)
+	elem = snd_mixer_first_elem(handle)
+	
+	print "\tpvol\tcvol\tpsw\tcsw\tenum"
+	while elem:
+		print snd_mixer_selem_get_name(elem),
+		print "\t",
+		if snd_mixer_selem_has_playback_volume(elem):
+			snd_mixer_selem_get_playback_volume_range(elem, &pmin, &pmax)
+			print "%d-%d\t"%(pmin, pmax),
+		else:
+			print "\t",
+		if snd_mixer_selem_has_playback_switch(elem):
+			print "yes\t",
+		else:
+			print "\t",
+		if snd_mixer_selem_has_capture_volume(elem):
+			snd_mixer_selem_get_capture_volume_range(elem, &cmin, &cmax)
+			print "%d-%d\t"%(cmin, cmax),
+		else:
+			print "\t",
+		if snd_mixer_selem_has_capture_switch(elem):
+			print "yes\t",
+		else:
+			print "\t",
+		if snd_mixer_selem_is_enumerated(elem):
+			enum_items_count = snd_mixer_selem_get_enum_items(elem)
+			for i from 0 <= i < enum_items_count:
+				snd_mixer_selem_get_enum_item_name(elem, i, sizeof(name)-1, name)
+				print "%s,"%name,
+		else:
+			print "\t",
+		print
+		elem = snd_mixer_elem_next(elem)
+	
+	snd_mixer_close(handle)
+
+def list_elems():
+	cdef long pmin, pmax, cmin, cmax, ival
+	cdef int enum_items_count, value
+	cdef unsigned int idx
+	cdef char name[32]
+
+	cdef snd_mixer_t *handle
+	get_handle(&handle)
+	
+	# poll fd	
+	count = snd_mixer_poll_descriptors_count(handle)
+	print "poll count:", count
+	cdef pollfd* fds = <pollfd*>calloc(count, sizeof(pollfd))
+	snd_mixer_poll_descriptors(handle, fds, count)
+	cdef pollfd fd
+	for i in xrange(count):
+		fd = fds[i]
+		print "poll fd: ", fd.fd
+		print "poll events: ", fd.events
+	
+	cdef snd_mixer_elem_t *elem
+	cdef snd_mixer_selem_id_t *sid = <snd_mixer_selem_id_t *>alloca(snd_mixer_selem_id_sizeof())
+	memset(sid, 0, snd_mixer_selem_id_sizeof())
+	elem = snd_mixer_first_elem(handle)
+	while elem:
+		print
+		snd_mixer_selem_get_id(elem, sid)
+		print "name:", snd_mixer_selem_id_get_name(sid)
+		print "index:", snd_mixer_selem_id_get_index(sid)
+		
+		playback_volume_or_switch = False
+		capture_volume_or_switch = False
+		
+		if snd_mixer_selem_has_common_volume(elem):
+			print "Common Volume"
+		if snd_mixer_selem_has_playback_volume(elem):
+			playback_volume_or_switch = True
+			print "Playback Volume"
+			if snd_mixer_selem_has_playback_volume_joined(elem):
+				print "Playback Volume Joined"
+		if snd_mixer_selem_has_capture_volume(elem):
+			capture_volume_or_switch = True
+			print "Capture Volume"
+			if snd_mixer_selem_has_capture_volume_joined(elem):
+				print "Capture Volume Joined"
+		
+		if snd_mixer_selem_has_common_switch(elem):
+			print "Common Switch"
+		if snd_mixer_selem_has_playback_switch(elem):
+			playback_volume_or_switch = True
+			print "Playback Switch"
+			if snd_mixer_selem_has_playback_switch_joined(elem):
+				print "Playback Switch Joined"
+		if snd_mixer_selem_has_capture_switch(elem):
+			capture_volume_or_switch = True
+			print "Capture Switch"
+			if snd_mixer_selem_has_capture_switch_joined(elem):
+				print "Capture Switch Joined"
+			if snd_mixer_selem_has_capture_switch_exclusive(elem):
+				print "Capture Switch Exclusive"
+		
+		playback_channel_count = 0
+		if playback_volume_or_switch:
+			if snd_mixer_selem_is_playback_mono(elem):
+				snd_mixer_selem_get_playback_volume(elem, <snd_mixer_selem_channel_id_t>0, &ival)
+				print "Playback Volume Channel Mono:", ival
+				snd_mixer_selem_get_playback_switch(elem, <snd_mixer_selem_channel_id_t>0, &value)
+				print "Playback Switch Mono:", value
+				playback_channel_count = 1
+			else:
+				for i in xrange(32):
+					if snd_mixer_selem_has_playback_channel(elem, i):
+						snd_mixer_selem_get_playback_volume(elem, i, &ival)
+						print "Playback Volume Channel %d:"%i, ival
+						snd_mixer_selem_get_playback_switch(elem, i, &value)
+						print "Playback Switch Channel %d:"%i, value
+						playback_channel_count += 1
+					else:
+						break
+		print "Playback Channel Count:", playback_channel_count
+
+		capture_channel_count = 0
+		if capture_volume_or_switch:
+			if snd_mixer_selem_is_capture_mono(elem):
+				snd_mixer_selem_get_capture_volume(elem, <snd_mixer_selem_channel_id_t>0, &ival)
+				print "Capture Volume Channel Mono:", ival
+				snd_mixer_selem_get_capture_switch(elem, <snd_mixer_selem_channel_id_t>0, &value)
+				print "Capture Switch Mono:", value
+				capture_channel_count = 1
+			else:
+				for i in xrange(32):
+					if snd_mixer_selem_has_capture_channel(elem, i):
+						snd_mixer_selem_get_capture_volume(elem, i, &ival)
+						print "Capture Volume Channel %d:"%i, ival
+						snd_mixer_selem_get_capture_switch(elem, i, &value)
+						print "Capture Switch Channel %d:"%i, value
+						capture_channel_count += 1
+					else:
+						break
+		print "Capture Channel Count:", capture_channel_count
+		
+		snd_mixer_selem_get_playback_volume_range(elem, &pmin, &pmax)
+		snd_mixer_selem_get_capture_volume_range(elem, &cmin, &cmax)
+		
+		print "Playback Volume Range:", pmin, pmax
+		print "Capture Volume Range:", cmin, cmax
+		
+		if snd_mixer_selem_is_enumerated(elem):
+			snd_mixer_selem_get_enum_item(elem, <snd_mixer_selem_channel_id_t>0, &idx)
+			print "Selected enum item:", idx
+		
+			enum_items_count = snd_mixer_selem_get_enum_items(elem)
+			print "Enumerates over %d Items: "%enum_items_count,
+
+			for i from 0 <= i < enum_items_count:
+				snd_mixer_selem_get_enum_item_name(elem, i, sizeof(name)-1, name)
+				print "%s,"%name,
+			print
+		
+		elem = snd_mixer_elem_next(elem)
+	snd_mixer_close(handle)
+
+#list_elems3()
+
+
+#cdef snd_mixer_t *handle
+#
+#get_handle(&handle)
+#
+#cdef snd_mixer_elem_t *elem
+#cdef snd_mixer_selem_id_t *sid = <snd_mixer_selem_id_t *>alloca(snd_mixer_selem_id_sizeof())
+#memset(sid, 0, snd_mixer_selem_id_sizeof())
+#
+#snd_mixer_selem_id_set_index(sid, 0)
+#snd_mixer_selem_id_set_name(sid, "Master")
+#elem = snd_mixer_find_selem(handle, sid)
+#
+#snd_mixer_selem_set_playback_volume(elem, <snd_mixer_selem_channel_id_t>0, 32)
+#
+#snd_mixer_selem_id_set_index(sid, 0)
+#snd_mixer_selem_id_set_name(sid, "IEC958 Playback Source")
+#elem = snd_mixer_find_selem(handle, sid)
+#
+#print snd_mixer_selem_set_enum_item(elem, <snd_mixer_selem_channel_id_t>0, 0)
+
+#snd_mixer_selem_id_set_index(sid, 0)
+#snd_mixer_selem_id_set_name(sid, "Mono Mixer Bypass Playback Swit")
+#elem = snd_mixer_find_selem(handle, sid)
+
+#snd_mixer_selem_set_playback_switch(elem, <snd_mixer_selem_channel_id_t>0, 1)
